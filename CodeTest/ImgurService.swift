@@ -16,9 +16,10 @@ import Kingfisher
 class ImgurService {
     
 
-    static func Search(searchString:String, page: Int,completion: (photos: [Picture]?, error:NSError?) -> Void)
+    static func Search(searchString:String, page: Int,prefetch:Bool ,completion: (photos: [Picture]?, error:NSError?) -> Void)
     {
         var myPictures : [Picture] = []
+        var PrefechPictures : [Picture] = []
         
         let url="https://api.imgur.com/3/gallery/search/viral"
         let headers = [
@@ -41,18 +42,30 @@ class ImgurService {
                 if(is_album=="false")
                 {
                 let picture = Picture(photoData: object)
-                myPictures.append(picture)
+                    if(prefetch){
+                    PrefechPictures.append(picture)
+                    }
+                    else
+                    {
+                    myPictures.append(picture)
+                    }
                 }
             }
             print("\(myPictures.count)")
-       /*
-            let urls = myPictures.map { NSURL(string: $0.thumbUrl)! }
+            PrefechPictures.removeAll()
+            if(prefetch)
+            {
+       
+            let urls = PrefechPictures.map { NSURL(string: $0.thumbUrl)! }
             let prefetcher = ImagePrefetcher(urls: urls, optionsInfo: nil, progressBlock: nil, completionHandler: {
                 (skippedResources, failedResources, completedResources) -> () in
-             //   print("These resources are prefetched: \(completedResources)")
+                
+               
             })
             prefetcher.start()
-        */    
+            return
+                }
+            
             
             
             

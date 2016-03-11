@@ -135,12 +135,17 @@ class PictureCollectionViewController: UIViewController {
         currentPage = 0
         }
     
+    func prefetch(pictures:[Picture]?, error:NSError?) {
+    }
+    
     func didLoadpictures(pictures:[Picture]?, error:NSError?) {
         if error == nil && pictures != nil {
             if isLoadingMore {
                 self.pictures = self.pictures + pictures!
+                print("picture+picture= \(pictures!.count) " )
             } else {
                 self.pictures = pictures
+                print("only picture\(pictures?.count)")
             }
             dispatch_async(dispatch_get_main_queue(), { () -> Void in
                 self.collectionView.reloadData()
@@ -226,7 +231,7 @@ extension PictureCollectionViewController: UICollectionViewDataSource
             {
                 return
             }
-            ImgurService.Search(Searchtext,page:currentPage ,completion: didLoadpictures)
+            ImgurService.Search(Searchtext,page:currentPage,prefetch:false  ,completion: didLoadpictures)
             print("load \(currentPage)")
             }
         }
@@ -271,6 +276,13 @@ extension PictureCollectionViewController: UISearchBarDelegate
     
     func searchBarCancelButtonClicked(searchBar: UISearchBar) {
         removeSearchBar()
+        print("Search=\(Searchtext)")
+    //Let us do prefetch here.
+        let queue = dispatch_queue_create("codetest.queue.request", DISPATCH_QUEUE_CONCURRENT)
+         dispatch_async(queue) { [weak self] in
+            
+             ImgurService.Search(self!.Searchtext,page:self!.currentPage+1, prefetch: true ,completion: self!.prefetch)
+            } 
     }
     
     func searchBarTextDidEndEditing(searchBar: UISearchBar) {
@@ -308,18 +320,28 @@ extension PictureCollectionViewController: UISearchResultsUpdating
         }
         
         
-        
-        self.pictures.removeAll()
-        //clear cache
-      cache?.clearMemoryCache()
-        currentPage=0
+      
         
         
         if let text = searchController.searchBar.text where searchController.searchBar.text!.characters.count > 0 {
-            currentPage+=1
+            
+            if(Searchtext==text){
+                
+            }
+            else
+            {
+                self.pictures.removeAll()
+                //clear cache
+                print("clear cache")
+                cache?.clearMemoryCache()
+                currentPage=0
+                isLoadingMore=false
+            }
+            
             print("s=\(text)")
-            ImgurService.Search(text,page:currentPage ,completion: didLoadpictures)
+            ImgurService.Search(text,page:currentPage, prefetch: false ,completion: didLoadpictures)
             Searchtext=text
+            currentPage+=1
         }
     }
     
